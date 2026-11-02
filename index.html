@@ -1493,20 +1493,16 @@ function guestCard(i) {
 
         <div class="guest-side guest-front">
 
-          <div class="portrait">
+<div class="portrait">
 
-            <img
-              class="guestphoto"
-              src="${guestPhotos[i]}"
-              alt="神秘嘉賓 ${i + 1}"
-              loading="lazy"
-              onerror="this.style.display='none'">
+  <img
+    class="guestphoto"
+    src="${guestPhotos[i]}"
+    alt="神秘嘉賓 ${i + 1}"
+    loading="lazy"
+    onerror="this.onerror=null; this.style.display='none'; this.parentElement.classList.add('photo-error');">
 
-            <span class="silhouette-holder">
-              ${silhouette}
-            </span>
-
-          </div>
+</div>
 
           <div class="ginfo">
 
