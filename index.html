@@ -1239,6 +1239,58 @@ button:focus-visible,
   .sheet, .guest-side { transition: none !important; }
 }
 
+
+/* ===== 2026 Tim Birthday additions: mobile-first countdown + missions ===== */
+.invite-first { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.invite-first .heading.gold { margin-top:16px !important; }
+.invite-first .rule { margin:13px auto; }
+.invite-first .desc { font-size:clamp(11px,2.8vw,13px); line-height:1.7; }
+.countdown-grid[hidden], .countdown-finished[hidden] { display:none !important; }
+.countdown-panel { width:100%; max-width:310px; margin:13px auto 6px; }
+.countdown-caption { font:9px Arial,sans-serif; letter-spacing:1.7px; color:var(--gold); margin-bottom:9px; }
+.countdown-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+.countdown-unit { min-width:0; padding:10px 2px 8px; border:1px solid #756044; background:#322637; }
+.countdown-value { display:block; font:normal clamp(19px,6vw,27px) Georgia,serif; color:#ebcd96; font-variant-numeric:tabular-nums; }
+.countdown-label { display:block; margin-top:5px; font:8px Arial,sans-serif; letter-spacing:.7px; color:#c9a879; }
+.countdown-finished { color:#e9ce9d; font-size:14px; line-height:1.5; padding:12px 0; }
+.mission-face { justify-content:center; padding:clamp(15px,3vh,28px) 17px; }
+.mission-page { width:100%; max-width:340px; margin:auto; display:flex; flex-direction:column; min-height:0; }
+.mission-page .heading { font-size:clamp(21px,5.7vw,28px); margin:9px 0 5px; }
+.mission-subtitle { font:9px Arial,sans-serif; color:var(--gold); letter-spacing:1.2px; margin-bottom:15px; }
+.mission-list { display:grid; gap:9px; }
+.mission-card { width:100%; text-align:left; color:var(--cream); background:#29202d; border:1px solid #6a5264; padding:11px 12px; display:flex; align-items:center; gap:11px; border-radius:3px; transition:background .18s ease,border-color .18s ease; }
+.mission-card.accepted { background:#382c39; border-color:#c2a06b; }
+.mission-card .mission-body { flex:1; min-width:0; }
+.mission-card .mission-number { font:9px Arial,sans-serif; letter-spacing:1px; color:#c9a879; }
+.mission-card .mission-name { font-size:15px; margin:5px 0; }
+.mission-card .mission-description { font-size:11px; line-height:1.55; color:#cbbdca; }
+.mission-card .mission-check { flex:0 0 20px; width:20px; height:20px; border:1px solid #a48a69; border-radius:50%; display:grid; place-items:center; font-size:12px; color:#f1d8a8; }
+.mission-card.accepted .mission-check { background:#85663f; border-color:#d6b780; }
+.mission-progress { margin-top:16px; }
+.mission-progress-line { display:flex; justify-content:space-between; font:9px Arial,sans-serif; color:#d5b681; letter-spacing:1px; }
+.mission-track { margin-top:8px; height:5px; background:#4a394c; border-radius:8px; overflow:hidden; }
+.mission-fill { height:100%; width:0; background:#d8b77e; transition:width .2s ease; }
+.mission-note { margin-top:10px; min-height:30px; font-size:11px; line-height:1.5; color:#c8b8c5; }
+.mission-note.all-accepted { color:#edcf97; }
+@media(max-height:700px) {
+  .invite-first .heading.gold { margin-top:8px !important; }
+  .invite-first .rule { margin:10px auto; }
+  .countdown-panel { margin:9px auto 3px; }
+  .countdown-unit { padding:7px 2px 6px; }
+  .mission-list { gap:7px; }
+  .mission-card { padding:8px 10px; }
+  .mission-card .mission-name { margin:3px 0; font-size:14px; }
+  .mission-progress { margin-top:10px; }
+  .mission-subtitle { margin-bottom:10px; }
+}
+@media(max-height:570px) {
+  .mission-face { justify-content:flex-start; overflow-y:auto; }
+  .mission-page { margin:0 auto; }
+  .invite-first { overflow-y:auto; justify-content:flex-start; }
+  .countdown-value { font-size:20px; }
+}
+@media(prefers-reduced-motion:reduce) { .mission-card,.mission-fill { transition:none; } }
+
 </style>
 </head>
 
@@ -1330,7 +1382,7 @@ button:focus-visible,
     </div>
 
     <div class="intro-copy">
-      <h1>壽星先生，你有一項秘密任務。</h1>
+      <h1>壽星先生，請開啟秘密任務。</h1>
 
       <p>SOMETHING SPECIAL IS COMING</p>
 
@@ -1607,7 +1659,7 @@ const front = [
   --------------------------------- */
 
   `
-  <div class="face-content">
+  <div class="face-content invite-first">
 
     <div class="micro">
       01 · THE INVITATION
@@ -1634,6 +1686,17 @@ const front = [
       <br>
       只需要準時出現，剩下的驚喜，就交給我們。
     </div>
+
+    <section class="countdown-panel" aria-label="距離生日派對開始倒數">
+      <div class="countdown-caption">COUNTDOWN TO THE SURPRISE</div>
+      <div class="countdown-grid" id="countdownGrid" aria-live="off">
+        <div class="countdown-unit"><span class="countdown-value" id="cdDays">--</span><span class="countdown-label">DAYS</span></div>
+        <div class="countdown-unit"><span class="countdown-value" id="cdHours">--</span><span class="countdown-label">HOURS</span></div>
+        <div class="countdown-unit"><span class="countdown-value" id="cdMinutes">--</span><span class="countdown-label">MINS</span></div>
+        <div class="countdown-unit"><span class="countdown-value" id="cdSeconds">--</span><span class="countdown-label">SECS</span></div>
+      </div>
+      <div class="countdown-finished" id="countdownFinished" hidden>THE CELEBRATION BEGINS ✦</div>
+    </section>
 
     <div class="rule"></div>
 
@@ -1713,77 +1776,47 @@ const front = [
 
 
   /* ---------------------------------
-     PAGE 04：派對體驗
+     PAGE 04：生日秘密任務
   --------------------------------- */
 
   `
-  <div class="face-content">
+  <div class="mission-page">
+    <div class="micro">04 · CLASSIFIED MISSION</div>
+    <div class="heading">生日秘密任務</div>
+    <div class="mission-subtitle">MISSION BRIEFING · FOR TIM ONLY</div>
 
-    <div class="micro">
-      04 · THE EXPERIENCE
-    </div>
-
-    <div
-      class="heading"
-      style="margin-top:22px">
-      今晚，你才是主角
-    </div>
-
-    <div class="desc">
-      GOOD PEOPLE. GOOD MEMORIES.
-    </div>
-
-    <div class="rule"></div>
-
-    <div class="experience">
-
-      <div class="experience-item">
-
-        <div class="symbol">✦</div>
-
-        <div>
-          <div class="experience-title">
-            一場專屬於你的慶祝
-          </div>
-          <div class="experience-sub">
-            REUNION
-          </div>
+    <div class="mission-list" id="missionList">
+      <button class="mission-card" type="button" data-mission="001" aria-pressed="false">
+        <div class="mission-body">
+          <div class="mission-number">MISSION 001</div>
+          <div class="mission-name">準時現身</div>
+          <div class="mission-description">11/15 下午 4 點，抵達指定地點。</div>
         </div>
-
-      </div>
-
-      <div class="experience-item">
-
-        <div class="symbol">◇</div>
-
-        <div>
-          <div class="experience-title">
-            值得紀念的夜晚
-          </div>
-          <div class="experience-sub">
-            CELEBRATION
-          </div>
+        <span class="mission-check" aria-hidden="true">✓</span>
+      </button>
+      <button class="mission-card" type="button" data-mission="002" aria-pressed="false">
+        <div class="mission-body">
+          <div class="mission-number">MISSION 002</div>
+          <div class="mission-name">破解神秘名單</div>
+          <div class="mission-description">猜猜那些熟悉的線索，究竟是誰？</div>
         </div>
-
-      </div>
-
-      <div class="experience-item">
-
-        <div class="symbol">✧</div>
-
-        <div>
-          <div class="experience-title">
-            還有一些小驚喜
-          </div>
-          <div class="experience-sub">
-            SURPRISES AWAIT
-          </div>
+        <span class="mission-check" aria-hidden="true">✓</span>
+      </button>
+      <button class="mission-card" type="button" data-mission="003" aria-pressed="false">
+        <div class="mission-body">
+          <div class="mission-number">MISSION 003</div>
+          <div class="mission-name">接受生日驚喜</div>
+          <div class="mission-description">今晚禁止操心，負責開心就好。</div>
         </div>
-
-      </div>
-
+        <span class="mission-check" aria-hidden="true">✓</span>
+      </button>
     </div>
 
+    <div class="mission-progress">
+      <div class="mission-progress-line"><span>MISSION ACCEPTED</span><span id="missionCount">0 / 3</span></div>
+      <div class="mission-track"><div class="mission-fill" id="missionFill"></div></div>
+      <div class="mission-note" id="missionNote" role="status">點擊任務卡片，確認接受挑戰。</div>
+    </div>
   </div>
   `,
 
@@ -1802,7 +1835,7 @@ const front = [
     <div
       class="heading"
       style="margin-top:18px">
-      今晚的唯一主角
+      當晚的唯一主角
     </div>
 
     <div class="desc">
@@ -1956,7 +1989,7 @@ book.innerHTML = front.map((content, i) => {
     <div class="sheet">
 
       <section
-        class="face ${isGuestPage ? "guestface" : ""}">
+        class="face ${isGuestPage ? "guestface" : ""} ${i === 3 ? "mission-face" : ""}">
 
         ${content}
 
@@ -2376,6 +2409,78 @@ function restart() {
   });
 
 }
+
+
+/* =========================================
+   15. 生日倒數與秘密任務
+   只更新局部 DOM，不重建頁面
+========================================= */
+
+const partyStart = new Date("2026-11-15T16:00:00+08:00").getTime();
+const countdownGrid = document.getElementById("countdownGrid");
+const countdownFinished = document.getElementById("countdownFinished");
+const countdownParts = ["cdDays", "cdHours", "cdMinutes", "cdSeconds"].map(id => document.getElementById(id));
+
+function updateCountdown() {
+  const remaining = Math.max(0, Math.ceil((partyStart - Date.now()) / 1000));
+  if (remaining === 0) {
+    countdownGrid.hidden = true;
+    countdownFinished.hidden = false;
+    return;
+  }
+  countdownGrid.hidden = false;
+  countdownFinished.hidden = true;
+  const values = [
+    Math.floor(remaining / 86400),
+    Math.floor(remaining % 86400 / 3600),
+    Math.floor(remaining % 3600 / 60),
+    remaining % 60
+  ];
+  values.forEach((value, index) => {
+    const nextValue = String(value).padStart(2, "0");
+    if (countdownParts[index].textContent !== nextValue) countdownParts[index].textContent = nextValue;
+  });
+}
+
+updateCountdown();
+setInterval(() => {
+  if (!document.hidden) updateCountdown();
+}, 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) updateCountdown(); });
+
+const missionStorageKey = "tim-birthday-missions-2026-v1";
+const missionCards = Array.from(document.querySelectorAll(".mission-card"));
+let acceptedMissions = [];
+try {
+  const saved = JSON.parse(localStorage.getItem(missionStorageKey) || "[]");
+  if (Array.isArray(saved)) acceptedMissions = saved.filter(id => ["001", "002", "003"].includes(id));
+} catch (_) { acceptedMissions = []; }
+
+function renderMissions() {
+  missionCards.forEach(card => {
+    const accepted = acceptedMissions.includes(card.dataset.mission);
+    card.classList.toggle("accepted", accepted);
+    card.setAttribute("aria-pressed", String(accepted));
+  });
+  const count = acceptedMissions.length;
+  document.getElementById("missionCount").textContent = count + " / 3";
+  document.getElementById("missionFill").style.width = (count / 3 * 100) + "%";
+  const note = document.getElementById("missionNote");
+  note.classList.toggle("all-accepted", count === 3);
+  note.textContent = count === 3
+    ? "✦ ALL MISSIONS ACCEPTED · 你的 VIP 入場資格已準備就緒。"
+    : "點擊任務卡片，確認接受挑戰。";
+}
+
+missionCards.forEach(card => card.addEventListener("click", () => {
+  const id = card.dataset.mission;
+  acceptedMissions = acceptedMissions.includes(id)
+    ? acceptedMissions.filter(item => item !== id)
+    : [...acceptedMissions, id];
+  try { localStorage.setItem(missionStorageKey, JSON.stringify(acceptedMissions)); } catch (_) {}
+  renderMissions();
+}));
+renderMissions();
 
 </script>
 
