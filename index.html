@@ -1201,32 +1201,42 @@ button:focus-visible,
   }
 }
 
-/* ==================================================
-   iPhone: retain original 3D BOOK page-turn animation.
-   Guest cards use isolated two-face switching to avoid
-   iOS Safari showing the front portrait through the back.
-   ================================================== */
-.guest { perspective: none; }
-.guest-inner {
+/* Mobile stable edition: 0.28-second crossfade between pages */
+.book { perspective: none; transform-style: flat; }
+.sheet {
   transform: none !important;
   transform-style: flat;
-  transition: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .28s ease, visibility 0s linear .28s;
+  will-change: auto;
 }
-.guest .guest-side {
-  transform: none !important;
+.sheet.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity .28s ease;
+}
+.face { backface-visibility: visible; -webkit-backface-visibility: visible; }
+.face.back { display: none; }
+/* Card flip: two flat faces, no Safari 3D backface bleed-through */
+.guest { perspective: none; }
+.guest-inner { transform: none !important; transform-style: flat; transition: none; }
+.guest-side {
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
+  transform: none !important;
+  transition: opacity .20s ease, scale .20s ease;
 }
-.guest .guest-front { display: flex !important; }
-.guest .guest-back { display: none !important; }
-.guest.flipped .guest-front { display: none !important; }
-.guest.flipped .guest-back { display: flex !important; }
-/* Old silhouette markup is never displayed. */
+.guest-front { opacity: 1; visibility: visible; scale: 1; }
+.guest-back { opacity: 0; visibility: hidden; scale: .96; pointer-events: none; }
+.guest.flipped .guest-front { opacity: 0; visibility: hidden; scale: .96; pointer-events: none; }
+.guest.flipped .guest-back { opacity: 1; visibility: visible; scale: 1; pointer-events: auto; }
+/* Do not show fallback silhouette if a photo is missing */
 .silhouette-holder { display: none !important; }
-/* Avoid costly continuous background rotation on small screens. */
-@media (max-width: 600px) {
-  .screen::before { animation: none; }
-  .guestphoto { transform: translateZ(0); }
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .guest-side { transition: none !important; }
 }
 
 </style>
@@ -1396,7 +1406,7 @@ const eventInfo = {
    guest07.png
    guest08.png
 
-   若照片不存在，會顯示剪影。
+   若照片不存在，會顯示原本的深色背景。
 ========================================= */
 
 const imageBase =
@@ -1979,27 +1989,16 @@ let busy = false;
 let pageTimer = null;
 
 function render() {
-
   sheets.forEach((sheet, i) => {
-
-    const turned = i < page;
-
-    sheet.classList.toggle("turned", turned);
-
-    sheet.style.zIndex = turned
-      ? i + 1
-      : sheets.length - i;
-
+    sheet.classList.toggle("active", i === page);
+    sheet.classList.remove("turned");
+    sheet.style.zIndex = i === page ? "10" : "0";
+    sheet.setAttribute("aria-hidden", String(i !== page));
   });
 
   prev.disabled = page === 0;
-
-  next.textContent =
-    page === 4 ? "REOPEN ↻" : "NEXT ›";
-
-  counter.textContent =
-    String(page + 1).padStart(2, "0") +
-    " / 05";
+  next.textContent = page === 4 ? "REOPEN ↻" : "NEXT ›";
+  counter.textContent = String(page + 1).padStart(2, "0") + " / 05";
 }
 
 function flip(delta) {
@@ -2019,7 +2018,7 @@ function flip(delta) {
 
   pageTimer = setTimeout(() => {
     busy = false;
-  }, 980);
+  }, 300);
 }
 
 prev.addEventListener("click", () => {
