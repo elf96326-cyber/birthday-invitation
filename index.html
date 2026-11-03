@@ -1200,6 +1200,35 @@ button:focus-visible,
     transition-duration: .01ms;
   }
 }
+
+/* ==================================================
+   iPhone: retain original 3D BOOK page-turn animation.
+   Guest cards use isolated two-face switching to avoid
+   iOS Safari showing the front portrait through the back.
+   ================================================== */
+.guest { perspective: none; }
+.guest-inner {
+  transform: none !important;
+  transform-style: flat;
+  transition: none;
+}
+.guest .guest-side {
+  transform: none !important;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+.guest .guest-front { display: flex !important; }
+.guest .guest-back { display: none !important; }
+.guest.flipped .guest-front { display: none !important; }
+.guest.flipped .guest-back { display: flex !important; }
+/* Old silhouette markup is never displayed. */
+.silhouette-holder { display: none !important; }
+/* Avoid costly continuous background rotation on small screens. */
+@media (max-width: 600px) {
+  .screen::before { animation: none; }
+  .guestphoto { transform: translateZ(0); }
+}
+
 </style>
 </head>
 
